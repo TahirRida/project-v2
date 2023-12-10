@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: exam-resource-quota
+  namespace: exam
+spec:
+  hard:
+    requests.cpu: "1" # Limite pour les requêtes CPU
+    requests.memory: 1Gi # Limite pour les requêtes mémoire
+    limits.cpu: "2" # Limite pour les limites CPU
+    limits.memory: 2Gi # Limite pour les limites mémoire

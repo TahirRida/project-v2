@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  mysql-service:
+    image: mysql:latest
+    container_name: mysql-container
+    ports:
+      - 3307:3306
+    networks:
+      - mynetwork
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: testdb
+
+  backend:
+    build: ./project-back-v2
+    container_name: backend
+    ports:
+      - 8080:8080
+    networks:
+      - mynetwork
+    depends_on:
+      - mysql-service
+
+  frontend:
+    image: tahirrida/frontendv2:1.0.0
+    container_name: frontend
+    ports:
+      - 80:80
+    networks:
+      - mynetwork
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  mynetwork:
+    driver: bridge

@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+type: Opaque
+data:
+  MYSQL_ROOT_USERNAME: cm9vdCANCg==
+  MYSQL_ROOT_PASSWORD: MTIzNDU2IA0K
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: tahirrida/springc:1.0.0
+          livenessProbe:
+            httpGet:
+              path: /healthz # Endpoint exposant l'état de santé de l'application
+              port: 8080
+          readinessProbe:
+            httpGet:
+              path: /ready # Endpoint indiquant la disponibilité de l'application
+              port: 8080 # Port sur lequel l'application écoute
+          startupProbe:
+            httpGet:
+              path: /startup # Endpoint indiquant le démarrage réussi de l'application
+              port: 8080 # Port sur lequel l'application écoute
+            failureThreshold: 30 # Nombre maximal d'échecs avant de considérer la sonde comme un échec
+            periodSeconds: 10 # Fréquence de la sonde
+
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_ROOT_PASSWORD
